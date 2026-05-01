@@ -55,5 +55,3 @@ export default async function handler(req, res) {
         res.status(500).json({ success: false, msg: "Lỗi kết nối máy chủ TheSieuRe sưng bro!" });
     }
 }
-
-

@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
     try {
         if (pin === "TUXHUB666" && seri === "12345") {
-            await saveToDatabaseAndDiscord(key, nick, gia, "CHẾ ĐỘ TEST");
+            await saveToDatabaseAndDiscord(key || "KEY_TEST", nick || "User_Test", gia || "0", "CHẾ ĐỘ TEST");
             return res.status(200).json({ success: true, msg: "TEST THÀNH CÔNG: Đã lưu Database và bắn Discord!" });
         }
 
@@ -42,7 +42,11 @@ export default async function handler(req, res) {
 
 async function saveToDatabaseAndDiscord(key, nick, gia, loai) {
     const { error: dbError } = await supabase.from('keys_store').insert([
-        { key_code: key, roblox_nick: nick, amount: gia.toString() }
+        { 
+            key_code: String(key || "Empty_Key"), 
+            roblox_nick: String(nick || "Unknown"), 
+            amount: String(gia || "0") 
+        }
     ]);
 
     if (dbError) throw new Error(dbError.message);
@@ -52,10 +56,10 @@ async function saveToDatabaseAndDiscord(key, nick, gia, loai) {
             title: "🚀 CÓ ĐƠN HÀNG MỚI (TUX STORE)",
             color: 3447003,
             fields: [
-                { name: "👤 Người mua", value: nick, inline: true },
-                { name: "💳 Loại thẻ", value: loai, inline: true },
-                { name: "💰 Mệnh giá", value: gia + "đ", inline: true },
-                { name: "🔑 Key tạo ra", value: "`" + key + "`" }
+                { name: "👤 Người mua", value: String(nick || "Unknown"), inline: true },
+                { name: "💳 Loại thẻ", value: String(loai || "N/A"), inline: true },
+                { name: "💰 Mệnh giá", value: (gia || "0") + "đ", inline: true },
+                { name: "🔑 Key tạo ra", value: "`" + String(key || "N/A") + "`" }
             ],
             timestamp: new Date()
         }]

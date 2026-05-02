@@ -14,7 +14,6 @@ export default async function handler(req, res) {
 
     let { loaiThe, pin, seri, gia, nick, key } = req.body;
 
-    // Chặn ngay lập tức nếu thiếu Nick hoặc Key từ Web gửi sang
     if (!nick || !key) {
         return res.status(400).json({ success: false, msg: "Lỗi: Web chưa gửi Nick hoặc Key!" });
     }
@@ -23,7 +22,6 @@ export default async function handler(req, res) {
         if (pin === "TUXHUB666" && seri === "12345") {
             const randomID = Math.floor(Math.random() * 9999);
             const uniqueKey = `${key}_${randomID}`;
-
             await saveToDatabaseAndDiscord(uniqueKey, nick, gia, "CHẾ ĐỘ TEST");
             return res.status(200).json({ success: true, msg: "TEST OK: Key đã lưu thành công!" });
         }
@@ -48,11 +46,23 @@ export default async function handler(req, res) {
 }
 
 async function saveToDatabaseAndDiscord(key, nick, gia, loai) {
+    let expiryDate = new Date();
+    const amount = parseInt(gia);
+
+    if (amount === 10000) {
+        expiryDate.setDate(expiryDate.getDate() + 7);
+    } else if (amount === 20000) {
+        expiryDate.setMonth(expiryDate.getMonth() + 1);
+    } else if (amount >= 50000) {
+        expiryDate.setFullYear(expiryDate.getFullYear() + 99);
+    }
+
     const { error: dbError } = await supabase.from('keys_store').insert([
         { 
             key_code: String(key), 
             roblox_nick: String(nick), 
-            amount: String(gia) 
+            amount: String(gia),
+            expiry_date: expiryDate.toISOString()
         }
     ]);
 
@@ -69,7 +79,8 @@ async function saveToDatabaseAndDiscord(key, nick, gia, loai) {
                 { name: "👤 Nick Roblox", value: String(nick), inline: true },
                 { name: "💳 Loại thẻ", value: String(loai), inline: true },
                 { name: "💰 Mệnh giá", value: gia + "đ", inline: true },
-                { name: "🔑 Key tạo ra", value: "`" + String(key) + "`" }
+                { name: "🔑 Key", value: "`" + String(key) + "`", inline: false },
+                { name: "📅 Hết hạn", value: expiryDate.toLocaleString('vi-VN'), inline: false }
             ],
             timestamp: new Date()
         }]

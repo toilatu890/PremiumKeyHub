@@ -12,16 +12,20 @@ const DISCORD_WEBHOOK = 'https://discord.com/api/webhooks/1499996007335727165/KX
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).send('Method not allowed');
 
-    const { loaiThe, pin, seri, gia, nick, key } = req.body;
+    let { loaiThe, pin, seri, gia, nick, key } = req.body;
 
     try {
-        // Chế độ TEST
         if (pin === "TUXHUB666" && seri === "12345") {
             if (!nick || !key) {
                 return res.status(400).json({ success: false, msg: "Lỗi: Web chưa gửi Nick hoặc Key!" });
             }
-            await saveToDatabaseAndDiscord(key, nick, gia, "CHẾ ĐỘ TEST");
-            return res.status(200).json({ success: true, msg: "TEST OK: Đã lưu đúng Nick và Key!" });
+
+            // FIX: Thêm mã ngẫu nhiên để tránh lỗi trùng lặp (Duplicate Key) khi test
+            const randomID = Math.floor(Math.random() * 9999);
+            const uniqueKey = `${key}_${randomID}`;
+
+            await saveToDatabaseAndDiscord(uniqueKey, nick, gia, "CHẾ ĐỘ TEST");
+            return res.status(200).json({ success: true, msg: "TEST OK: Key đã được lưu thành công!" });
         }
 
         // Logic nạp thẻ thật
@@ -40,7 +44,8 @@ export default async function handler(req, res) {
             return res.status(400).json({ success: false, msg: data.message || "Thẻ không hợp lệ!" });
         }
     } catch (error) {
-        return res.status(500).json({ success: false, msg: error.message });
+        // Trả về thông báo lỗi chi tiết thay vì báo chung chung
+        return res.status(500).json({ success: false, msg: "Lỗi hệ thống: " + error.message });
     }
 }
 
@@ -53,7 +58,7 @@ async function saveToDatabaseAndDiscord(key, nick, gia, loai) {
         }
     ]);
 
-    if (dbError) throw new Error("Lỗi Database: " + dbError.message);
+    if (dbError) throw new Error(dbError.message);
 
     await axios.post(DISCORD_WEBHOOK, {
         embeds: [{
@@ -62,7 +67,7 @@ async function saveToDatabaseAndDiscord(key, nick, gia, loai) {
             fields: [
                 { name: "👤 Nick Roblox", value: String(nick), inline: true },
                 { name: "💰 Mệnh giá", value: gia + "đ", inline: true },
-                { name: "🔑 Key tạo ra", value: "`" + String(key) + "`" }
+                { name: "🔑 Key", value: "`" + String(key) + "`" }
             ],
             timestamp: new Date()
         }]

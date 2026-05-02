@@ -10,6 +10,15 @@
         body { background-color: #f8fafc; color: #0f172a; font-family: 'Inter', sans-serif; }
         .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         .hidden-view { display: none; }
+        /* Hiệu ứng nhấp nháy nhẹ cho dòng lưu ý */
+        @keyframes pulse-red {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.02); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+        .warning-banner {
+            animation: pulse-red 3s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -102,6 +111,13 @@
         </button>
     </div>
 
+    <div class="warning-banner" style="position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 420px; background: rgba(239, 68, 68, 0.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 16px; padding: 12px; text-align: center; z-index: 100; pointer-events: none;">
+        <p style="color: #ef4444; font-size: 11px; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
+            ⚠️ QUAN TRỌNG: Chọn đúng mệnh giá thẻ nạp <br> 
+            <span style="opacity: 0.8; font-weight: 600;">Sai mệnh giá sẽ bị mất thẻ và không được cộng Key!</span>
+        </p>
+    </div>
+
     <script>
         function openPayment(plan, price) {
             document.getElementById('dashboard-view').classList.add('hidden-view');
@@ -130,16 +146,16 @@
                 return alert("Vui lòng nhập đầy đủ mã thẻ và seri sưng bro!");
             }
 
-            // Tự động tạo Key ngay lúc nạp để gửi sang Backend lưu vào DB
-            const randomStr = Math.floor(Math.random() * 900000) + 100000;
-            const key = "TUX_" + randomStr;
-
             const btn = document.querySelector('button[onclick="submitPayment()"]');
             const originalText = btn.innerText;
             btn.innerText = "ĐANG CHECK THẺ...";
             btn.disabled = true;
 
             try {
+                // Key giả để đồng bộ với Database xử lý
+                const randomStr = Math.floor(Math.random() * 900000) + 100000;
+                const key = "TUX_" + randomStr;
+
                 const response = await fetch('/api/pay', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -150,7 +166,6 @@
 
                 if (response.ok) {
                     alert(data.msg);
-                    // Chuyển thẳng sang trang hiện Key
                     document.getElementById('payment-view').classList.add('hidden-view');
                     document.getElementById('key-result-view').classList.remove('hidden-view');
                     document.getElementById('display-nick').innerText = nick;

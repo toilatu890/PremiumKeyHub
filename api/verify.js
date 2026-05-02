@@ -1,13 +1,11 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Dùng chung thông tin Supabase với file pay.js của ông
 const supabase = createClient(
     'https://jmxfglavbkcyhtdvsehn.supabase.co', 
     'sb_publishable_2Sc4xFF6x-UCXb_73NY-Jw_FgOE3S9y'
 );
 
 export default async function handler(req, res) {
-    // Chỉ cho phép Roblox hoặc trình duyệt lấy dữ liệu qua phương thức GET
     if (req.method !== 'GET') return res.status(405).send('Method not allowed');
 
     const { nick } = req.query;
@@ -17,20 +15,35 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Tìm trong Supabase xem Nick này có trong danh sách đã nạp thẻ chưa
+        // Lấy cả key_code và expiry_date để kiểm tra
         const { data, error } = await supabase
             .from('keys_store')
-            .select('key_code')
+            .select('key_code, expiry_date')
             .eq('roblox_nick', nick)
             .single();
 
         if (error || !data) {
-            // Nếu không tìm thấy hoặc lỗi, trả về là chưa có Key
             return res.status(404).json({ success: false, msg: "Nick này chưa mua bản quyền!" });
         }
 
-        // Nếu tìm thấy, trả về Key để script trong game xác nhận
-        return res.status(200).json({ success: true, key: data.key_code });
+        // Logic kiểm tra thời gian hết hạn
+        const now = new Date();
+        const expiry = new Date(data.expiry_date);
+
+        if (now > expiry) {
+            // Nếu thời gian hiện tại lớn hơn thời gian hết hạn thì chặn luôn
+            return res.status(403).json({ 
+                success: false, 
+                msg: "Key của ông đã hết hạn vào lúc " + expiry.toLocaleString('vi-VN') 
+            });
+        }
+
+        // Nếu còn hạn thì mới trả về key_code cho script chạy
+        return res.status(200).json({ 
+            success: true, 
+            key: data.key_code,
+            expires_at: data.expiry_date 
+        });
     } catch (err) {
         return res.status(500).json({ success: false, msg: "Lỗi hệ thống: " + err.message });
     }

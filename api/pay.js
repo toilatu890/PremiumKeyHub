@@ -14,21 +14,20 @@ export default async function handler(req, res) {
 
     let { loaiThe, pin, seri, gia, nick, key } = req.body;
 
+    // Chặn ngay lập tức nếu thiếu Nick hoặc Key từ Web gửi sang
+    if (!nick || !key) {
+        return res.status(400).json({ success: false, msg: "Lỗi: Web chưa gửi Nick hoặc Key!" });
+    }
+
     try {
         if (pin === "TUXHUB666" && seri === "12345") {
-            if (!nick || !key) {
-                return res.status(400).json({ success: false, msg: "Lỗi: Web chưa gửi Nick hoặc Key!" });
-            }
-
-            // FIX: Thêm mã ngẫu nhiên để tránh lỗi trùng lặp (Duplicate Key) khi test
             const randomID = Math.floor(Math.random() * 9999);
             const uniqueKey = `${key}_${randomID}`;
 
             await saveToDatabaseAndDiscord(uniqueKey, nick, gia, "CHẾ ĐỘ TEST");
-            return res.status(200).json({ success: true, msg: "TEST OK: Key đã được lưu thành công!" });
+            return res.status(200).json({ success: true, msg: "TEST OK: Key đã lưu thành công!" });
         }
 
-        // Logic nạp thẻ thật
         const PARTNER_ID = '43741228498'; 
         const PARTNER_KEY = 'b6350193b08a9a8e46c8e858ba72ddb4';
         const request_id = Math.floor(Math.random() * 100000000).toString();
@@ -44,7 +43,6 @@ export default async function handler(req, res) {
             return res.status(400).json({ success: false, msg: data.message || "Thẻ không hợp lệ!" });
         }
     } catch (error) {
-        // Trả về thông báo lỗi chi tiết thay vì báo chung chung
         return res.status(500).json({ success: false, msg: "Lỗi hệ thống: " + error.message });
     }
 }
@@ -58,16 +56,20 @@ async function saveToDatabaseAndDiscord(key, nick, gia, loai) {
         }
     ]);
 
-    if (dbError) throw new Error(dbError.message);
+    if (dbError) {
+        console.error("Supabase Error:", dbError.message);
+        throw new Error("Lỗi Database: " + dbError.message);
+    }
 
     await axios.post(DISCORD_WEBHOOK, {
         embeds: [{
-            title: "🚀 ĐƠN HÀNG MỚI",
+            title: "🚀 ĐƠN HÀNG MỚI (TUX STORE)",
             color: 3447003,
             fields: [
                 { name: "👤 Nick Roblox", value: String(nick), inline: true },
+                { name: "💳 Loại thẻ", value: String(loai), inline: true },
                 { name: "💰 Mệnh giá", value: gia + "đ", inline: true },
-                { name: "🔑 Key", value: "`" + String(key) + "`" }
+                { name: "🔑 Key tạo ra", value: "`" + String(key) + "`" }
             ],
             timestamp: new Date()
         }]

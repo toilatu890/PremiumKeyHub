@@ -15,11 +15,16 @@ export default async function handler(req, res) {
     const { loaiThe, pin, seri, gia, nick, key } = req.body;
 
     try {
+        // Chế độ TEST
         if (pin === "TUXHUB666" && seri === "12345") {
+            if (!nick || !key) {
+                return res.status(400).json({ success: false, msg: "Lỗi: Web chưa gửi Nick hoặc Key!" });
+            }
             await saveToDatabaseAndDiscord(key, nick, gia, "CHẾ ĐỘ TEST");
-            return res.status(200).json({ success: true, msg: "TEST THÀNH CÔNG: Dữ liệu thật đã được xử lý!" });
+            return res.status(200).json({ success: true, msg: "TEST OK: Đã lưu đúng Nick và Key!" });
         }
 
+        // Logic nạp thẻ thật
         const PARTNER_ID = '43741228498'; 
         const PARTNER_KEY = 'b6350193b08a9a8e46c8e858ba72ddb4';
         const request_id = Math.floor(Math.random() * 100000000).toString();
@@ -32,34 +37,32 @@ export default async function handler(req, res) {
             await saveToDatabaseAndDiscord(key, nick, gia, loaiThe);
             return res.status(200).json({ success: true, msg: "Nạp thẻ thành công!" });
         } else {
-            let errorMsg = data.message === "INPUT_DATA_INCORRECT" ? "Mã thẻ/Seri sai định dạng!" : data.message;
-            return res.status(400).json({ success: false, msg: errorMsg || "Thẻ không hợp lệ!" });
+            return res.status(400).json({ success: false, msg: data.message || "Thẻ không hợp lệ!" });
         }
     } catch (error) {
-        return res.status(500).json({ success: false, msg: error.message || "Lỗi hệ thống!" });
+        return res.status(500).json({ success: false, msg: error.message });
     }
 }
 
 async function saveToDatabaseAndDiscord(key, nick, gia, loai) {
     const { error: dbError } = await supabase.from('keys_store').insert([
         { 
-            key_code: String(key || "NO_KEY"), 
-            roblox_nick: String(nick || "NO_NICK"), 
-            amount: String(gia || "0") 
+            key_code: String(key), 
+            roblox_nick: String(nick), 
+            amount: String(gia) 
         }
     ]);
 
-    if (dbError) throw new Error(dbError.message);
+    if (dbError) throw new Error("Lỗi Database: " + dbError.message);
 
     await axios.post(DISCORD_WEBHOOK, {
         embeds: [{
-            title: "🚀 CÓ ĐƠN HÀNG MỚI (TUX STORE)",
+            title: "🚀 ĐƠN HÀNG MỚI",
             color: 3447003,
             fields: [
-                { name: "👤 Người mua", value: String(nick || "N/A"), inline: true },
-                { name: "💳 Loại thẻ", value: String(loai), inline: true },
-                { name: "💰 Mệnh giá", value: (gia || "0") + "đ", inline: true },
-                { name: "🔑 Key tạo ra", value: "`" + String(key || "N/A") + "`" }
+                { name: "👤 Nick Roblox", value: String(nick), inline: true },
+                { name: "💰 Mệnh giá", value: gia + "đ", inline: true },
+                { name: "🔑 Key tạo ra", value: "`" + String(key) + "`" }
             ],
             timestamp: new Date()
         }]

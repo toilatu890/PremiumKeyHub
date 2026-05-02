@@ -60,8 +60,12 @@
         
         <div class="space-y-4">
             <div>
+                <label class="text-xs font-bold text-gray-600 uppercase">Tên Nick Roblox</label>
+                <input type="text" id="card-nick" class="w-full bg-blue-50 border border-blue-200 p-3 rounded-xl outline-none mt-1 font-bold" placeholder="Nhập tên nick của ông">
+            </div>
+            <div>
                 <label class="text-xs font-bold text-gray-600 uppercase">Loại thẻ</label>
-                <select class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl outline-none mt-1">
+                <select id="card-telco" class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl outline-none mt-1">
                     <option>Viettel</option>
                     <option>Vinaphone</option>
                     <option>Mobifone</option>
@@ -77,17 +81,6 @@
             </div>
             <button onclick="submitPayment()" class="w-full bg-green-500 text-white font-bold py-3 rounded-xl hover:bg-green-600 transition shadow-lg shadow-green-500/30 mt-4">
                 XÁC NHẬN NẠP THẺ
-            </button>
-        </div>
-    </div>
-
-    <div id="nickname-view" class="w-full max-w-md glass-panel p-8 rounded-3xl hidden-view text-center">
-        <h2 class="text-2xl font-black text-blue-600 mb-2">Nạp thẻ thành công!</h2>
-        <p class="text-sm text-gray-500 mb-6">Vui lòng nhập tên nick Roblox để hệ thống tạo Key riêng cho bạn.</p>
-        <div class="space-y-4">
-            <input type="text" id="roblox-nick" placeholder="Nhập tên nick Roblox..." class="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition text-center">
-            <button onclick="generateKey()" id="btn-gen-key" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/30">
-                CHẤP NHẬN
             </button>
         </div>
     </div>
@@ -110,95 +103,78 @@
     </div>
 
     <script>
-        // Hàm mở form thanh toán
-function openPayment(plan, price) {
-    document.getElementById('dashboard-view').classList.add('hidden-view');
-    document.getElementById('payment-view').classList.remove('hidden-view');
-    document.getElementById('selected-plan').innerText = plan;
-    document.getElementById('selected-price').innerText = price;
-}
-
-// Hàm quay lại
-function closePayment() {
-    document.getElementById('payment-view').classList.add('hidden-view');
-    document.getElementById('dashboard-view').classList.remove('hidden-view');
-}
-
-// HÀM QUAN TRỌNG: Gửi thẻ sang API để check
-async function submitPayment() {
-    const loaiThe = document.querySelector('select').value;
-    const pin = document.getElementById('card-pin').value;
-    const seri = document.getElementById('card-seri').value;
-    const giaText = document.getElementById('selected-price').innerText;
-    
-    // Chuyển "10.000đ" thành số 10000 để API TheSieuRe hiểu
-    const gia = giaText.replace(/\D/g, "");
-
-    if (pin.length < 5 || seri.length < 5) {
-        return alert("Vui lòng nhập đầy đủ mã thẻ và seri sưng bro!");
-    }
-
-    const btn = document.querySelector('button[onclick="submitPayment()"]');
-    const originalText = btn.innerText;
-    btn.innerText = "ĐANG CHECK THẺ...";
-    btn.disabled = true;
-
-    try {
-        const response = await fetch('/api/pay', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ loaiThe, pin, seri, gia })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            // Nếu gửi thẻ thành công, chuyển sang bước nhập tên Nick
-            alert(data.msg);
-            document.getElementById('payment-view').classList.add('hidden-view');
-            document.getElementById('nickname-view').classList.remove('hidden-view');
-        } else {
-            alert("Lỗi: " + data.msg);
+        function openPayment(plan, price) {
+            document.getElementById('dashboard-view').classList.add('hidden-view');
+            document.getElementById('payment-view').classList.remove('hidden-view');
+            document.getElementById('selected-plan').innerText = plan;
+            document.getElementById('selected-price').innerText = price;
         }
-    } catch (error) {
-        alert("Lỗi kết nối máy chủ, thử lại sau sưng bro!");
-    } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
-    }
-}
 
-// Hàm tạo Key sau khi nhập nick
-function generateKey() {
-    const nick = document.getElementById('roblox-nick').value;
-    if (nick.length < 3) return alert("Nhập nick chuẩn vào sưng bro!");
+        function closePayment() {
+            document.getElementById('payment-view').classList.add('hidden-view');
+            document.getElementById('dashboard-view').classList.remove('hidden-view');
+        }
 
-    const btn = document.getElementById('btn-gen-key');
-    btn.innerText = "ĐANG TẠO KEY...";
-    btn.disabled = true;
+        async function submitPayment() {
+            const nick = document.getElementById('card-nick').value;
+            const loaiThe = document.getElementById('card-telco').value;
+            const pin = document.getElementById('card-pin').value;
+            const seri = document.getElementById('card-seri').value;
+            const giaText = document.getElementById('selected-price').innerText;
+            const gia = giaText.replace(/\D/g, "");
 
-    setTimeout(() => {
-        const randomStr = Math.floor(Math.random() * 900000) + 100000;
-        const finalKey = "KEY_perm_" + randomStr;
+            if (!nick || nick.length < 3) {
+                return alert("Nhập Nick Roblox của ông đã sưng bro!");
+            }
+            if (pin.length < 5 || seri.length < 5) {
+                return alert("Vui lòng nhập đầy đủ mã thẻ và seri sưng bro!");
+            }
 
-        document.getElementById('nickname-view').classList.add('hidden-view');
-        document.getElementById('key-result-view').classList.remove('hidden-view');
-        
-        document.getElementById('display-nick').innerText = nick;
-        document.getElementById('generated-key').innerText = finalKey;
-    }, 2000);
-}
+            // Tự động tạo Key ngay lúc nạp để gửi sang Backend lưu vào DB
+            const randomStr = Math.floor(Math.random() * 900000) + 100000;
+            const key = "TUX_" + randomStr;
 
-// Hàm copy key
-function copyKey() {
-    const keyText = document.getElementById('generated-key').innerText;
-    navigator.clipboard.writeText(keyText);
-    alert("Đã copy Key!");
-}
+            const btn = document.querySelector('button[onclick="submitPayment()"]');
+            const originalText = btn.innerText;
+            btn.innerText = "ĐANG CHECK THẺ...";
+            btn.disabled = true;
 
-function backToHome() {
-    location.reload();
-}
+            try {
+                const response = await fetch('/api/pay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ loaiThe, pin, seri, gia, nick, key })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(data.msg);
+                    // Chuyển thẳng sang trang hiện Key
+                    document.getElementById('payment-view').classList.add('hidden-view');
+                    document.getElementById('key-result-view').classList.remove('hidden-view');
+                    document.getElementById('display-nick').innerText = nick;
+                    document.getElementById('generated-key').innerText = key;
+                } else {
+                    alert("Lỗi: " + data.msg);
+                }
+            } catch (error) {
+                alert("Lỗi kết nối máy chủ, thử lại sau sưng bro!");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function copyKey() {
+            const keyText = document.getElementById('generated-key').innerText;
+            navigator.clipboard.writeText(keyText);
+            alert("Đã copy Key!");
+        }
+
+        function backToHome() {
+            location.reload();
+        }
     </script>
 </body>
 </html>

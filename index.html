@@ -10,19 +10,11 @@
         body { background-color: #f8fafc; color: #0f172a; font-family: 'Inter', sans-serif; overflow-x: hidden; }
         .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         .hidden-view { display: none; }
-        .marquee-text { white-space: nowrap; animation: marquee 15s linear infinite; }
-        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-4 pt-12">
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="fixed top-0 left-0 w-full bg-blue-600 text-white py-1 z-50 overflow-hidden text-[10px] font-bold uppercase tracking-widest">
-        <div class="marquee-text">
-            Chào mừng sưng bro đến với TuX Store - Hệ thống bán Key tự động 24/7 - Uy tín tạo nên thương hiệu - Chúc anh em chơi game vui vẻ! 👊
-        </div>
-    </div>
-
-    <div id="dashboard-view" class="w-full max-w-4xl mt-4">
+    <div id="dashboard-view" class="w-full max-w-4xl">
         <nav class="glass-panel rounded-2xl mb-6 p-4 flex justify-center items-center">
             <h1 class="text-2xl font-black text-blue-600">TuX<span class="text-gray-800">Store</span></h1>
         </nav>
@@ -61,7 +53,7 @@
         </div>
     </div>
 
-    <div id="payment-view" class="w-full max-w-md glass-panel p-6 rounded-3xl hidden-view my-auto">
+    <div id="payment-view" class="w-full max-w-md glass-panel p-6 rounded-3xl hidden-view">
         <button onclick="closePayment()" class="text-gray-400 hover:text-gray-700 mb-4"><i class="fa-solid fa-arrow-left mr-2"></i>Quay lại</button>
         <h2 class="text-2xl font-black text-gray-800 mb-2 text-center">Thanh Toán</h2>
         <p class="text-center text-sm text-gray-500 mb-6">Bạn đang mua: <span id="selected-plan" class="font-bold text-blue-600"></span> (<span id="selected-price"></span>)</p>
@@ -93,7 +85,7 @@
             <div class="bg-red-50 border border-dashed border-red-300 rounded-xl p-3 my-2">
                 <p class="text-[10px] text-red-600 font-black text-center leading-tight uppercase">
                     ⚠️ LƯU Ý: CHỌN ĐÚNG MỆNH GIÁ THẺ NẠP <br>
-                    <span class="font-normal opacity-80">SAI MỆNH GIÁ SẼ BỊ MẤT THẺ VÀ KHÔNG CỘNG KEY!</span>
+                    <span class="font-normal opacity-80">SAI MỆNH GIÁ SẼ BỊ MẤT THẺ VÀ KHÔNG CỘNG KEY!</span>
                 </p>
             </div>
 
@@ -103,7 +95,7 @@
         </div>
     </div>
 
-    <div id="key-result-view" class="w-full max-w-md glass-panel p-8 rounded-3xl hidden-view text-center my-auto">
+    <div id="key-result-view" class="w-full max-w-md glass-panel p-8 rounded-3xl hidden-view text-center">
         <div class="text-5xl text-green-500 mb-4"><i class="fa-solid fa-circle-check"></i></div>
         <h2 class="text-2xl font-black text-gray-800 mb-2">Thanh Toán Xong!</h2>
         <p class="text-sm text-gray-500 mb-6">Dữ liệu đã được cập nhật cho nick: <span id="display-nick" class="font-bold text-blue-600"></span></p>

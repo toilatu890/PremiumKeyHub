@@ -46,29 +46,56 @@ export default async function handler(req, res) {
 }
 
 async function saveToDatabaseAndDiscord(key, nick, gia, loai) {
-    let expiryDate = new Date();
     const amount = parseInt(gia);
+    let now = new Date();
+    
+    const { data: existing } = await supabase
+        .from('keys_store')
+        .select('expiry_date')
+        .eq('roblox_nick', String(nick))
+        .maybeSingle();
 
-    if (amount === 10000) {
-        expiryDate.setDate(expiryDate.getDate() + 7);
-    } else if (amount === 20000) {
-        expiryDate.setMonth(expiryDate.getMonth() + 1);
-    } else if (amount >= 50000) {
-        expiryDate.setFullYear(expiryDate.getFullYear() + 99);
+    let finalExpiry;
+
+    if (amount >= 50000) {
+        finalExpiry = new Date();
+        finalExpiry.setFullYear(finalExpiry.getFullYear() + 99);
+    } else {
+        let baseDate = new Date();
+        
+        if (existing && existing.expiry_date) {
+            let oldExpiry = new Date(existing.expiry_date);
+            if (oldExpiry > now) {
+                baseDate = oldExpiry; 
+            }
+        }
+
+        if (amount === 10000) {
+            baseDate.setDate(baseDate.getDate() + 7);
+        } else if (amount === 20000) {
+            baseDate.setMonth(baseDate.getMonth() + 1);
+        }
+        
+        finalExpiry = baseDate;
     }
 
-    const { error: dbError } = await supabase.from('keys_store').insert([
-        { 
+    if (existing) {
+        const { error: updateError } = await supabase.from('keys_store').update({
+            key_code: String(key),
+            amount: String(gia),
+            expiry_date: finalExpiry.toISOString()
+        }).eq('roblox_nick', String(nick));
+
+        if (updateError) throw new Error("Lỗi Database Update: " + updateError.message);
+    } else {
+        const { error: insertError } = await supabase.from('keys_store').insert([{ 
             key_code: String(key), 
             roblox_nick: String(nick), 
             amount: String(gia),
-            expiry_date: expiryDate.toISOString()
-        }
-    ]);
+            expiry_date: finalExpiry.toISOString()
+        }]);
 
-    if (dbError) {
-        console.error("Supabase Error:", dbError.message);
-        throw new Error("Lỗi Database: " + dbError.message);
+        if (insertError) throw new Error("Lỗi Database Insert: " + insertError.message);
     }
 
     await axios.post(DISCORD_WEBHOOK, {
@@ -80,7 +107,7 @@ async function saveToDatabaseAndDiscord(key, nick, gia, loai) {
                 { name: "💳 Loại thẻ", value: String(loai), inline: true },
                 { name: "💰 Mệnh giá", value: gia + "đ", inline: true },
                 { name: "🔑 Key", value: "`" + String(key) + "`", inline: false },
-                { name: "📅 Hết hạn", value: expiryDate.toLocaleString('vi-VN'), inline: false }
+                { name: "📅 Hết hạn", value: finalExpiry.toLocaleString('vi-VN'), inline: false }
             ],
             timestamp: new Date()
         }]

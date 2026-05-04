@@ -14,13 +14,19 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div id="dashboard-view" class="w-full max-w-4xl">
+    <div id="dashboard-view" class="w-full max-w-3xl">
         <nav class="glass-panel rounded-2xl mb-6 p-4 flex justify-center items-center">
             <h1 class="text-2xl font-black text-blue-600">TuX<span class="text-gray-800">Store</span></h1>
         </nav>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="glass-panel p-6 rounded-3xl text-center flex flex-col h-full">
+        <div class="relative w-full h-40 md:h-56 mb-6 rounded-2xl overflow-hidden shadow-sm border border-gray-200">
+            <img src="https://picsum.photos/800/400?random=1" class="slide absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-100">
+            <img src="https://picsum.photos/800/400?random=2" class="slide absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0">
+            <img src="https://picsum.photos/800/400?random=3" class="slide absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="glass-panel p-5 rounded-3xl text-center flex flex-col h-full">
                 <h4 class="text-gray-500 font-bold mb-2 uppercase text-xs">Key 1 Tuần</h4>
                 <div class="text-4xl font-black mb-4">10.000đ</div>
                 <ul class="text-sm text-gray-600 space-y-2 mb-6 text-left flex-grow">
@@ -30,7 +36,7 @@
                 <button onclick="openPayment('Key 1 Tuần', '10.000đ')" class="w-full bg-blue-100 text-blue-700 py-3 rounded-xl font-bold hover:bg-blue-200 transition">MUA NGAY</button>
             </div>
 
-            <div class="glass-panel p-6 rounded-3xl text-center border-2 border-blue-500 relative flex flex-col h-full transform md:-translate-y-2 shadow-xl bg-white">
+            <div class="glass-panel p-5 rounded-3xl text-center border-2 border-blue-500 relative flex flex-col h-full transform md:-translate-y-2 shadow-xl bg-white">
                 <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-[10px] font-black px-4 py-1 rounded-full">BÁN CHẠY</span>
                 <h4 class="text-gray-500 font-bold mb-2 uppercase text-xs">Key 1 Tháng</h4>
                 <div class="text-4xl font-black mb-4">20.000đ</div>
@@ -41,7 +47,7 @@
                 <button onclick="openPayment('Key 1 Tháng', '20.000đ')" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/30">MUA NGAY</button>
             </div>
 
-            <div class="glass-panel p-6 rounded-3xl text-center flex flex-col h-full">
+            <div class="glass-panel p-5 rounded-3xl text-center flex flex-col h-full">
                 <h4 class="text-gray-500 font-bold mb-2 uppercase text-xs">Key Vĩnh Viễn</h4>
                 <div class="text-4xl font-black mb-4">50.000đ</div>
                 <ul class="text-sm text-gray-600 space-y-2 mb-6 text-left flex-grow">
@@ -53,7 +59,7 @@
         </div>
     </div>
 
-    <div id="payment-view" class="w-full max-w-md glass-panel p-6 rounded-3xl hidden-view">
+    <div id="payment-view" class="w-full max-w-sm glass-panel p-6 rounded-3xl hidden-view">
         <button onclick="closePayment()" class="text-gray-400 hover:text-gray-700 mb-4"><i class="fa-solid fa-arrow-left mr-2"></i>Quay lại</button>
         <h2 class="text-2xl font-black text-gray-800 mb-2 text-center">Thanh Toán</h2>
         <p class="text-center text-sm text-gray-500 mb-6">Bạn đang mua: <span id="selected-plan" class="font-bold text-blue-600"></span> (<span id="selected-price"></span>)</p>
@@ -95,7 +101,7 @@
         </div>
     </div>
 
-    <div id="key-result-view" class="w-full max-w-md glass-panel p-8 rounded-3xl hidden-view text-center">
+    <div id="key-result-view" class="w-full max-w-sm glass-panel p-8 rounded-3xl hidden-view text-center">
         <div class="text-5xl text-green-500 mb-4"><i class="fa-solid fa-circle-check"></i></div>
         <h2 class="text-2xl font-black text-gray-800 mb-2">Thanh Toán Xong!</h2>
         <p class="text-sm text-gray-500 mb-6">Dữ liệu đã được cập nhật cho nick: <span id="display-nick" class="font-bold text-blue-600"></span></p>
@@ -103,6 +109,21 @@
     </div>
 
     <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        
+        if (slides.length > 0) {
+            setInterval(() => {
+                slides[currentSlide].classList.remove('opacity-100');
+                slides[currentSlide].classList.add('opacity-0');
+                
+                currentSlide = (currentSlide + 1) % slides.length;
+                
+                slides[currentSlide].classList.remove('opacity-0');
+                slides[currentSlide].classList.add('opacity-100');
+            }, 10000);
+        }
+
         function openPayment(plan, price) {
             document.getElementById('dashboard-view').classList.add('hidden-view');
             document.getElementById('payment-view').classList.remove('hidden-view');

@@ -12,21 +12,47 @@
         .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: background-color 0.3s, border-color 0.3s; }
         .hidden-view { display: none; }
         
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: #ffffff; box-shadow: 2px 0 15px rgba(0,0,0,0.1); transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 50; padding: 24px; display: flex; flex-direction: column; }
+        .sidebar.open { left: 0; }
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 40; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .sidebar-overlay.open { opacity: 1; pointer-events: auto; }
+
         body.dark-theme { background-color: #0f172a; color: #f8fafc; }
         body.dark-theme .glass-panel { background: rgba(30, 41, 59, 0.9); border-color: #334155; }
+        body.dark-theme .sidebar { background: #1e293b; border-right: 1px solid #334155; }
         body.dark-theme .title-span { color: #f8fafc; }
         body.dark-theme .text-gray-800 { color: #f8fafc; }
+        body.dark-theme .text-gray-700 { color: #e2e8f0; }
         body.dark-theme .text-gray-600, body.dark-theme .text-gray-500 { color: #cbd5e1; }
         body.dark-theme input, body.dark-theme select { background-color: #1e293b; color: #f8fafc; border-color: #475569; }
         body.dark-theme .bg-white { background-color: #1e293b; }
         body.dark-theme .fa-bars { color: #cbd5e1; }
+        body.dark-theme .sidebar-hover:hover { background-color: #334155; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <div class="sidebar" id="sidebar">
+        <h2 class="text-2xl font-black text-blue-600 mb-8 border-b border-gray-100 pb-4">TuX<span class="text-gray-800 transition title-span">Menu</span></h2>
+        
+        <div class="space-y-3 flex-grow">
+            <button onclick="toggleTheme()" class="w-full text-left p-4 rounded-xl hover:bg-gray-100 sidebar-hover transition font-bold text-gray-700 flex items-center justify-between">
+                Theme Đen/Trắng <i class="fa-solid fa-circle-half-stroke text-blue-500"></i>
+            </button>
+            <button onclick="openScriptView()" class="w-full text-left p-4 rounded-xl hover:bg-gray-100 sidebar-hover transition font-bold text-gray-700 flex items-center justify-between">
+                Script TuX Hub <i class="fa-solid fa-code text-blue-500"></i>
+            </button>
+        </div>
+        
+        <div class="mt-auto text-center border-t border-gray-100 pt-4">
+            <p class="text-xs text-gray-500 font-bold">TuX Store © 2026</p>
+        </div>
+    </div>
+
     <div id="dashboard-view" class="w-full max-w-3xl">
         <nav class="glass-panel rounded-2xl mb-6 p-4 relative flex justify-center items-center">
-            <i class="fa-solid fa-bars text-xl cursor-pointer absolute left-5 text-gray-600 hover:text-blue-500 transition" onclick="toggleTheme()"></i>
+            <i class="fa-solid fa-bars text-xl cursor-pointer absolute left-5 text-gray-600 hover:text-blue-500 transition" onclick="openSidebar()"></i>
             <h1 class="text-2xl font-black text-blue-600">TuX<span class="text-gray-800 transition title-span">Store</span></h1>
         </nav>
 
@@ -73,8 +99,8 @@
         </div>
     </div>
 
-    <div id="payment-view" class="w-full max-sm glass-panel p-6 rounded-3xl hidden-view">
-        <button onclick="closePayment()" class="text-gray-400 hover:text-gray-700 mb-4"><i class="fa-solid fa-arrow-left mr-2"></i>Quay lại</button>
+    <div id="payment-view" class="w-full max-w-sm glass-panel p-6 rounded-3xl hidden-view">
+        <button onclick="closePayment()" class="text-gray-400 hover:text-gray-700 mb-4 font-bold"><i class="fa-solid fa-arrow-left mr-2"></i>Quay lại</button>
         <h2 class="text-2xl font-black text-gray-800 mb-2 text-center">Thanh Toán</h2>
         <p class="text-center text-sm text-gray-500 mb-6">Bạn đang mua: <span id="selected-plan" class="font-bold text-blue-600"></span> (<span id="selected-price"></span>)</p>
         
@@ -85,7 +111,7 @@
             </div>
             <div>
                 <label class="text-[10px] font-bold text-gray-600 uppercase">Loại thẻ</label>
-                <select id="card-telco" class="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl outline-none mt-1">
+                <select id="card-telco" class="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl outline-none mt-1 font-bold">
                     <option>Viettel</option>
                     <option>Vinaphone</option>
                     <option>Mobifone</option>
@@ -94,11 +120,11 @@
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="text-[10px] font-bold text-gray-600 uppercase">Mã thẻ (PIN)</label>
-                    <input type="text" id="card-pin" class="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl outline-none mt-1" placeholder="PIN">
+                    <input type="text" id="card-pin" class="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl outline-none mt-1 font-bold" placeholder="PIN">
                 </div>
                 <div>
                     <label class="text-[10px] font-bold text-gray-600 uppercase">Số Seri</label>
-                    <input type="text" id="card-seri" class="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl outline-none mt-1" placeholder="SERI">
+                    <input type="text" id="card-seri" class="w-full bg-gray-50 border border-gray-100 p-3 rounded-xl outline-none mt-1 font-bold" placeholder="SERI">
                 </div>
             </div>
 
@@ -126,6 +152,32 @@
         <button onclick="backToHome()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">VỀ TRANG CHỦ</button>
     </div>
 
+    <div id="script-view" class="w-full max-w-3xl glass-panel p-6 sm:p-10 rounded-3xl hidden-view relative min-h-[400px] flex flex-col">
+        <button onclick="closeScriptView()" class="absolute top-5 left-5 text-gray-500 hover:text-gray-800 font-bold transition"><i class="fa-solid fa-arrow-left mr-2"></i>Quay lại</button>
+        
+        <h2 class="text-3xl font-black text-gray-800 mt-8 mb-6 text-center">Script TuX Hub</h2>
+        
+        <div class="bg-gray-900 rounded-2xl p-5 mb-6 shadow-inner relative overflow-hidden flex-grow">
+            <div class="absolute top-0 left-0 w-full h-8 bg-gray-800 flex items-center px-4 space-x-2">
+                <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+            <code id="script-code" class="block text-green-400 font-mono text-sm mt-6 break-all">loadstring(game:HttpGet("https://raw.githubusercontent.com/toilatu890/Clone-YSM-LIB/refs/heads/main/LIbNap.lua"))()</code>
+        </div>
+        
+        <button onclick="copyScript()" id="btn-copy" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 mb-8">
+            <i class="fa-solid fa-copy mr-2"></i> COPY SCRIPT
+        </button>
+
+        <div class="border-t border-gray-200 pt-6 text-center mt-auto">
+            <h3 class="font-black text-gray-800 uppercase tracking-widest text-sm mb-2">Thông tin</h3>
+            <p class="text-gray-600 font-bold flex items-center justify-center">
+                <i class="fa-brands fa-tiktok text-xl mr-2 text-black dark:text-white"></i> TikTok : Pipilabu
+            </p>
+        </div>
+    </div>
+
     <script>
         window.onload = function() {
             const savedTheme = localStorage.getItem('theme');
@@ -133,6 +185,16 @@
                 document.body.classList.add('dark-theme');
             }
         };
+
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('open');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('open');
+        }
 
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
@@ -166,6 +228,37 @@
         function closePayment() {
             document.getElementById('payment-view').classList.add('hidden-view');
             document.getElementById('dashboard-view').classList.remove('hidden-view');
+        }
+
+        function openScriptView() {
+            closeSidebar();
+            document.getElementById('dashboard-view').classList.add('hidden-view');
+            document.getElementById('payment-view').classList.add('hidden-view');
+            document.getElementById('key-result-view').classList.add('hidden-view');
+            document.getElementById('script-view').classList.remove('hidden-view');
+        }
+
+        function closeScriptView() {
+            document.getElementById('script-view').classList.add('hidden-view');
+            document.getElementById('dashboard-view').classList.remove('hidden-view');
+        }
+
+        function copyScript() {
+            const scriptText = document.getElementById('script-code').innerText;
+            navigator.clipboard.writeText(scriptText).then(() => {
+                const btn = document.getElementById('btn-copy');
+                btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i> ĐÃ COPY THÀNH CÔNG!';
+                btn.classList.replace('bg-blue-600', 'bg-green-500');
+                btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-600');
+                btn.classList.replace('shadow-blue-500/30', 'shadow-green-500/30');
+                
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fa-solid fa-copy mr-2"></i> COPY SCRIPT';
+                    btn.classList.replace('bg-green-500', 'bg-blue-600');
+                    btn.classList.replace('hover:bg-green-600', 'hover:bg-blue-700');
+                    btn.classList.replace('shadow-green-500/30', 'shadow-blue-500/30');
+                }, 2000);
+            });
         }
 
         async function submitPayment() {

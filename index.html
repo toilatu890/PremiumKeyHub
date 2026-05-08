@@ -73,7 +73,7 @@
         </div>
     </div>
 
-    <div id="payment-view" class="w-full max-w-sm glass-panel p-6 rounded-3xl hidden-view">
+    <div id="payment-view" class="w-full max-sm glass-panel p-6 rounded-3xl hidden-view">
         <button onclick="closePayment()" class="text-gray-400 hover:text-gray-700 mb-4"><i class="fa-solid fa-arrow-left mr-2"></i>Quay lại</button>
         <h2 class="text-2xl font-black text-gray-800 mb-2 text-center">Thanh Toán</h2>
         <p class="text-center text-sm text-gray-500 mb-6">Bạn đang mua: <span id="selected-plan" class="font-bold text-blue-600"></span> (<span id="selected-price"></span>)</p>
@@ -127,6 +127,13 @@
     </div>
 
     <script>
+        window.onload = function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+            }
+        };
+
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
 
@@ -142,6 +149,11 @@
 
         function toggleTheme() {
             document.body.classList.toggle('dark-theme');
+            if (document.body.classList.contains('dark-theme')) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
         }
 
         function openPayment(plan, price) {
@@ -165,9 +177,9 @@
             const gia = giaText.replace(/\D/g, "");
             const turnstileElement = document.querySelector('[name="cf-turnstile-response"]');
 
-            if (!nick || nick.length < 3) return alert("Nhập Nick đã sưng bro!");
-            if (pin.length < 5 || seri.length < 5) return alert("Nhập đủ mã thẻ sưng bro!");
-            if (!turnstileElement || !turnstileElement.value) return alert("Vui lòng xác minh captcha để mua Key sưng bro!");
+            if (!nick || nick.length < 3) return alert("Nhập Nick vào nhé!");
+            if (pin.length < 5 || seri.length < 5) return alert("Nhập đủ mã thẻ nhé!");
+            if (!turnstileElement || !turnstileElement.value) return alert("Chưa xác thực captcha nhé");
 
             const btn = document.querySelector('button[onclick="submitPayment()"]');
             btn.innerText = "ĐANG XỬ LÝ...";
@@ -190,7 +202,7 @@
                     alert("Lỗi: " + data.msg);
                 }
             } catch (error) {
-                alert("Lỗi server sưng bro!");
+                alert("Lỗi server rồi!");
             } finally {
                 btn.innerText = "XÁC NHẬN NẠP THẺ";
                 btn.disabled = false;

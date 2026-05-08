@@ -6,23 +6,37 @@
     <title>TuX Hub | Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
-        body { background-color: #f8fafc; color: #0f172a; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        body { background-color: #f8fafc; color: #0f172a; font-family: 'Inter', sans-serif; overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
+        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: background-color 0.3s, border-color 0.3s; }
         .hidden-view { display: none; }
+        
+        body.dark-theme { background-color: #0f172a; color: #f8fafc; }
+        body.dark-theme .glass-panel { background: rgba(30, 41, 59, 0.9); border-color: #334155; }
+        body.dark-theme .title-span { color: #f8fafc; }
+        body.dark-theme .text-gray-800 { color: #f8fafc; }
+        body.dark-theme .text-gray-600, body.dark-theme .text-gray-500 { color: #cbd5e1; }
+        body.dark-theme input, body.dark-theme select { background-color: #1e293b; color: #f8fafc; border-color: #475569; }
+        body.dark-theme .bg-white { background-color: #1e293b; }
+        body.dark-theme .fa-bars { color: #cbd5e1; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
     <div id="dashboard-view" class="w-full max-w-3xl">
-        <nav class="glass-panel rounded-2xl mb-6 p-4 flex justify-center items-center">
-            <h1 class="text-2xl font-black text-blue-600">TuX<span class="text-gray-800">Store</span></h1>
+        <nav class="glass-panel rounded-2xl mb-6 p-4 relative flex justify-center items-center">
+            <i class="fa-solid fa-bars text-xl cursor-pointer absolute left-5 text-gray-600 hover:text-blue-500 transition" onclick="toggleTheme()"></i>
+            <h1 class="text-2xl font-black text-blue-600">TuX<span class="text-gray-800 transition title-span">Store</span></h1>
         </nav>
 
-        <div class="relative w-full h-40 md:h-56 mb-6 rounded-2xl overflow-hidden shadow-sm border border-gray-200">
-            <img src="https://picsum.photos/800/400?random=1" class="slide absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-100">
-            <img src="https://picsum.photos/800/400?random=2" class="slide absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0">
-            <img src="https://picsum.photos/800/400?random=3" class="slide absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 opacity-0">
+        <div class="relative w-full h-40 md:h-56 mb-6 rounded-2xl overflow-hidden shadow-sm border border-gray-200 group">
+            <img src="https://picsum.photos/800/400?random=1" class="slide absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-100">
+            <img src="https://picsum.photos/800/400?random=2" class="slide absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-0">
+            <img src="https://picsum.photos/800/400?random=3" class="slide absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-0">
+            
+            <button onclick="changeSlide(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><i class="fa-solid fa-chevron-left"></i></button>
+            <button onclick="changeSlide(1)" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -95,6 +109,10 @@
                 </p>
             </div>
 
+            <div class="flex justify-center my-3">
+                <div class="cf-turnstile" data-sitekey="0x4AAAAAADLeKN3CgmKoHGoY"></div>
+            </div>
+
             <button onclick="submitPayment()" class="w-full bg-green-500 text-white font-bold py-4 rounded-xl hover:bg-green-600 transition shadow-lg shadow-green-500/20">
                 XÁC NHẬN NẠP THẺ
             </button>
@@ -111,17 +129,19 @@
     <script>
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
-        
-        if (slides.length > 0) {
-            setInterval(() => {
-                slides[currentSlide].classList.remove('opacity-100');
-                slides[currentSlide].classList.add('opacity-0');
-                
-                currentSlide = (currentSlide + 1) % slides.length;
-                
-                slides[currentSlide].classList.remove('opacity-0');
-                slides[currentSlide].classList.add('opacity-100');
-            }, 10000);
+
+        function changeSlide(step) {
+            slides[currentSlide].classList.remove('opacity-100');
+            slides[currentSlide].classList.add('opacity-0');
+            
+            currentSlide = (currentSlide + step + slides.length) % slides.length;
+            
+            slides[currentSlide].classList.remove('opacity-0');
+            slides[currentSlide].classList.add('opacity-100');
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
         }
 
         function openPayment(plan, price) {
@@ -143,9 +163,11 @@
             const seri = document.getElementById('card-seri').value;
             const giaText = document.getElementById('selected-price').innerText;
             const gia = giaText.replace(/\D/g, "");
+            const turnstileElement = document.querySelector('[name="cf-turnstile-response"]');
 
             if (!nick || nick.length < 3) return alert("Nhập Nick đã sưng bro!");
             if (pin.length < 5 || seri.length < 5) return alert("Nhập đủ mã thẻ sưng bro!");
+            if (!turnstileElement || !turnstileElement.value) return alert("Vui lòng xác minh captcha để mua Key sưng bro!");
 
             const btn = document.querySelector('button[onclick="submitPayment()"]');
             btn.innerText = "ĐANG XỬ LÝ...";
@@ -156,7 +178,7 @@
                 const response = await fetch('/api/pay', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ loaiThe, pin, seri, gia, nick, key })
+                    body: JSON.stringify({ loaiThe, pin, seri, gia, nick, key, cfToken: turnstileElement.value })
                 });
 
                 const data = await response.json();

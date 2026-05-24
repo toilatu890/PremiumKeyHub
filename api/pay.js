@@ -98,18 +98,24 @@ async function saveToDatabaseAndDiscord(key, nick, gia, loai) {
         if (insertError) throw new Error("Lỗi Database Insert: " + insertError.message);
     }
 
-    await axios.post(DISCORD_WEBHOOK, {
-        embeds: [{
-            title: "🚀 ĐƠN HÀNG MỚI (TUX STORE)",
-            color: 3447003,
-            fields: [
-                { name: "👤 Nick Roblox", value: String(nick), inline: true },
-                { name: "💳 Loại thẻ", value: String(loai), inline: true },
-                { name: "💰 Mệnh giá", value: gia + "đ", inline: true },
-                { name: "🔑 Key", value: "`" + String(key) + "`", inline: false },
-                { name: "📅 Hết hạn", value: finalExpiry.toLocaleString('vi-VN'), inline: false }
-            ],
-            timestamp: new Date()
-        }]
-    });
+    // ĐÃ FIX: Bọc Discord lại để chống lỗi mạng làm sập web
+    try {
+        await axios.post(DISCORD_WEBHOOK, {
+            embeds: [{
+                title: "🚀 ĐƠN HÀNG MỚI (TUX STORE)",
+                color: 3447003,
+                fields: [
+                    { name: "👤 Nick Roblox", value: String(nick), inline: true },
+                    { name: "💳 Loại thẻ", value: String(loai), inline: true },
+                    { name: "💰 Mệnh giá", value: gia + "đ", inline: true },
+                    { name: "🔑 Key", value: "`" + String(key) + "`", inline: false },
+                    { name: "📅 Hết hạn", value: finalExpiry.toLocaleString('vi-VN'), inline: false }
+                ],
+                timestamp: new Date()
+            }]
+        });
+    } catch (webhookError) {
+        // Nếu Discord lỗi, code sẽ bỏ qua và vẫn báo Nạp thẻ thành công cho khách!
+        console.error("Lỗi gửi Discord (Bỏ qua): ", webhookError.message);
+    }
 }
